@@ -1,0 +1,54 @@
+# ========================
+# Environment / Secrets
+# ========================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ========================
+# Go Binaries & Build
+# ========================
+gamesitebknd-main
+gamesitebknd-main.exe
+*.exe
+*.out
+*.test
+dist/
+build/
+
+# ========================
+# Go Dependencies
+# ========================
+vendor/
+
+# ========================
+# Go Test & Coverage
+# ========================
+*.coverprofile
+coverage.out
+coverage.html
+
+# ========================
+# IDE & Editor
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.suo
+*.user
+
+# ========================
+# OS Files
+# ========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ========================
+# Logs
+# ========================
+*.log
+logs/
