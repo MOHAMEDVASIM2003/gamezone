@@ -2,8 +2,9 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Box, CircularProgress, Container, Typography } from "@mui/material";
-import { keyframes } from "@emotion/react";
 import { motion } from "framer-motion";
+import GameCard from "../Components/GameCard";
+import { useToast } from "../Components/Toast";
 import "@fontsource/metal-mania";
 
 // Images
@@ -54,15 +55,6 @@ import imgn32 from "../Assests/imgn32.png";
 import imgn33 from "../Assests/imgn33.jpg";
 import imgn34 from "../Assests/imgn34.jpg";
 import imgn35 from "../Assests/imgn35.jpg";
-
-// Blob animation
-const blobBounce = keyframes`
-  0% { transform: translate(-100%, -100%) translate3d(0, 0, 0); }
-  25% { transform: translate(-100%, -100%) translate3d(100%, 0, 0); }
-  50% { transform: translate(-100%, -100%) translate3d(100%, 100%, 0); }
-  75% { transform: translate(-100%, -100%) translate3d(0, 100%, 0); }
-  100% { transform: translate(-100%, -100%) translate3d(0, 0, 0); }
-`;
 
 const games = [
   // ── Original 10 ──────────────────────────────────────────
@@ -122,9 +114,14 @@ const games = [
 const BATCH = 12;
 
 const Store = ({ updateCartCount = () => {} }) => {
+  const { addToast } = useToast();
   const [cartIds, setCartIds] = useState(() => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     return new Set(cart.map((item) => item.id));
+  });
+  const [wishlistIds, setWishlistIds] = useState(() => {
+    const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+    return new Set(wishlist.map((item) => item.id));
   });
   const [visibleCount, setVisibleCount] = useState(BATCH);
   const sentinelRef = useRef(null);
@@ -149,194 +146,95 @@ const Store = ({ updateCartCount = () => {} }) => {
   }, [visibleCount]);
 
   const addToCart = (game) => {
-    if (cartIds.has(game.id)) return;
+    if (cartIds.has(game.id)) {
+      addToast(`${game.title} is already in your cart!`, 'info');
+      return;
+    }
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
     cart.push(game);
     localStorage.setItem("cart", JSON.stringify(cart));
     setCartIds((prev) => new Set([...prev, game.id]));
     updateCartCount(cart.length);
+    addToast(`${game.title} added to cart! 🛒`, 'success');
+  };
+
+  const addToWishlist = (game) => {
+    const isInWishlist = wishlistIds.has(game.id);
+    if (isInWishlist) {
+      // Remove from wishlist
+      let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+      wishlist = wishlist.filter((item) => item.id !== game.id);
+      localStorage.setItem("wishlist", JSON.stringify(wishlist));
+      setWishlistIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(game.id);
+        return newSet;
+      });
+      addToast(`${game.title} removed from wishlist`, 'info');
+    } else {
+      // Add to wishlist
+      let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+      wishlist.push(game);
+      localStorage.setItem("wishlist", JSON.stringify(wishlist));
+      setWishlistIds((prev) => new Set([...prev, game.id]));
+      addToast(`${game.title} added to wishlist! ❤️`, 'success');
+    }
   };
 
   return (
     <Box sx={{ background: "linear-gradient(to top, #330000, #000)", minHeight: "100vh", py: 6 }}>
-
       {/* Title */}
-      <Typography
-        align="center"
-        sx={{ fontFamily: "'Metal Mania', cursive", fontSize: { xs: 36, md: 55 }, color: "white", mb: 4 }}
-      >
-        Available Games
-      </Typography>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <Typography
+          align="center"
+          sx={{ fontFamily: "'Metal Mania', cursive", fontSize: { xs: 36, md: 55 }, color: "white", mb: 6 }}
+        >
+          🎮 Available Games
+        </Typography>
+      </motion.div>
 
       {/* Game Grid */}
       <Container maxWidth="xl">
         <Box
           sx={{
-            display: "flex",
-            flexWrap: "wrap",
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "repeat(1, 1fr)",
+              sm: "repeat(2, 1fr)",
+              md: "repeat(3, 1fr)",
+              lg: "repeat(4, 1fr)",
+            },
             gap: 3,
-            justifyContent: "center",
             pb: 6,
           }}
         >
-          {games.slice(0, visibleCount).map((game, index) => {
-            const inCart = cartIds.has(game.id);
-            return (
-            <motion.div
+          {games.slice(0, visibleCount).map((game, index) => (
+            <GameCard
               key={game.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: index * 0.05 }}
-              whileHover={{ scale: 1.05 }}
-            >
-              <Box
-                sx={{
-                  position: "relative",
-                  width: { xs: "calc(50vw - 24px)", sm: 280, md: 300 },
-                  minWidth: { xs: "140px" },
-                  maxWidth: "300px",
-                  height: { xs: "auto", md: 400 },
-                  borderRadius: "14px",
-                  overflow: "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  boxShadow: inCart ? "4px 4px 4px 4px rgba(0,200,80,0.45)" : "4px 4px 4px 4px rgba(239,13,13,0.5)",
-                  "&:hover .blob": {
-                    opacity: 1,
-                    animation: `${blobBounce} 5s infinite ease`,
-                  },
-                }}
-              >
-                {/* Glass layer */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 5, left: 5,
-                    right: 5, bottom: 5,
-                    backdropFilter: "blur(24px)",
-                    borderRadius: "10px",
-                    outline: "2px solid black",
-                    zIndex: 2,
-                  }}
-                />
-
-                {/* IN CART badge */}
-                {inCart && (
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: 12, right: 12,
-                      zIndex: 10,
-                      backgroundColor: "#00c853",
-                      color: "white",
-                      fontSize: { xs: "9px", md: "11px" },
-                      fontWeight: 700,
-                      px: 1, py: 0.3,
-                      borderRadius: "4px",
-                      letterSpacing: 1,
-                      boxShadow: "0 0 8px rgba(0,200,80,0.7)",
-                    }}
-                  >
-                    ✓ IN CART
-                  </Box>
-                )}
-
-                {/* Blob */}
-                <Box
-                  className="blob"
-                  sx={{
-                    position: "absolute",
-                    top: "50%", left: "50%",
-                    width: 150, height: 150,
-                    borderRadius: "50%",
-                    backgroundColor: "#ff0000",
-                    opacity: 0,
-                    filter: "blur(12px)",
-                    zIndex: 1,
-                    pointerEvents: "none",
-                    transform: "translate(-50%, -50%)",
-                    transition: "opacity 0.5s ease",
-                  }}
-                />
-
-                {/* Content */}
-                <Box sx={{ zIndex: 3, textAlign: "center", color: "white", px: 1 }}>
-                  <Box
-                    component="img"
-                    src={game.image}
-                    alt={game.title}
-                    sx={{ width: "100%", maxWidth: "280px", height: { xs: "110px", md: "150px" }, objectFit: "cover", borderRadius: "10px", mt: 1, mb: 1 }}
-                  />
-                  <Box sx={{ mt: 1 }}>
-                    {/* Category badge */}
-                    <Typography sx={{ fontSize: { xs: "9px", md: "11px" }, color: "#af40ff", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, mb: 0.5 }}>
-                      {game.category}
-                    </Typography>
-                    <Typography variant="h5" sx={{ fontSize: { xs: "14px", md: "20px" }, fontFamily: '"Nevan RUS", sans-serif', mb: 0.5 }}>
-                      {game.title}
-                    </Typography>
-                    <Typography sx={{ fontSize: { xs: "11px", md: "13px" }, color: "grey", mb: 0.5 }}>{game.description}</Typography>
-                    <Typography variant="body2" color="white" mb={1} sx={{ fontFamily: '"Nevan RUS", sans-serif', color: "#00ddeb", fontWeight: "bold", fontSize: { xs: "13px", md: "14px" } }}>
-                      ${game.price.toFixed(2)}
-                    </Typography>
-
-                    {/* Slice Button */}
-                    <Box
-                      onClick={() => addToCart(game)}
-                      sx={{
-                        px: 2, py: 1, mt: 0.5,
-                        fontSize: "16px", fontWeight: 700,
-                        border: inCart ? "2px solid #00c853" : "2px solid rgb(135,80,80)",
-                        borderRadius: "4px",
-                        position: "relative",
-                        overflow: "hidden",
-                        cursor: inCart ? "default" : "pointer",
-                        display: "inline-block",
-                        zIndex: 0,
-                        backgroundColor: inCart ? "rgba(0,200,80,0.15)" : "transparent",
-                        transition: "300ms cubic-bezier(0.83,0,0.17,1)",
-                        "&:active": !inCart ? { transform: "scale(0.98)", filter: "brightness(0.9)" } : {},
-                        "&::after": !inCart ? {
-                          content: '""',
-                          width: 0, height: "300%",
-                          position: "absolute",
-                          top: "50%", left: "50%",
-                          transform: "translate(-50%,-50%) rotate(30deg)",
-                          backgroundColor: "red",
-                          zIndex: -1,
-                          transition: "500ms cubic-bezier(0.83,0,0.17,1)",
-                        } : {},
-                        "&:hover": !inCart ? {
-                          "& .text": { color: "#202020" },
-                          "&::after": { width: "calc(120% + 1em)" },
-                        } : {},
-                      }}
-                    >
-                      <Typography
-                        className="text"
-                        sx={{ color: inCart ? "#00c853" : "white", transition: "color 700ms cubic-bezier(0.83,0,0.17,1)", fontSize: "15px", fontWeight: 700, fontFamily: '"Nevan RUS", sans-serif' }}
-                      >
-                        {inCart ? "✓ Added" : "Add to Cart"}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              </Box>
-            </motion.div>
-            );
-          })}
+              game={game}
+              onAddToCart={addToCart}
+              onAddToWishlist={addToWishlist}
+              isInWishlist={wishlistIds.has(game.id)}
+              isInCart={cartIds.has(game.id)}
+            />
+          ))}
         </Box>
 
         {/* Sentinel + loader */}
-        <Box ref={sentinelRef} sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+        <Box ref={sentinelRef} sx={{ display: "flex", justifyContent: "center", py: 4, flexDirection: "column", alignItems: "center" }}>
           {visibleCount < games.length ? (
-            <CircularProgress size={36} sx={{ color: "red" }} />
+            <>
+              <CircularProgress size={40} sx={{ color: "#FFD700", mb: 2 }} />
+              <Typography sx={{ color: "#b0b0b0", fontSize: "14px", letterSpacing: 1 }}>
+                Loading more games...
+              </Typography>
+            </>
           ) : (
-            <Typography sx={{ color: "grey", fontSize: "13px", letterSpacing: 1 }}>
-              All {games.length} games loaded
-            </Typography>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+              <Typography sx={{ color: "#FFD700", fontSize: "16px", letterSpacing: 1, fontFamily: '"Metal Mania", cursive' }}>
+                ✓ All {games.length} games loaded
+              </Typography>
+            </motion.div>
           )}
         </Box>
       </Container>

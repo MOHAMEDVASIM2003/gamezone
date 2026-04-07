@@ -10,9 +10,11 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../Components/Toast";
 import "@fontsource/metal-mania";
 
 const Cart = ({ updateCartCount }) => {
+  const { addToast } = useToast();
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const navigate = useNavigate();
@@ -26,18 +28,22 @@ const Cart = ({ updateCartCount }) => {
   }, [updateCartCount]);
 
   const removeFromCart = (index) => {
+    const removedItem = cart[index];
     const newCart = [...cart];
     newCart.splice(index, 1);
     localStorage.setItem("cart", JSON.stringify(newCart));
     setCart(newCart);
     updateCartCount(newCart.length);
+    addToast(`${removedItem.title} removed from cart`, 'info');
   };
 
   const removeFromWishlist = (index) => {
+    const removedItem = wishlist[index];
     const newWishlist = [...wishlist];
     newWishlist.splice(index, 1);
     localStorage.setItem("wishlist", JSON.stringify(newWishlist));
     setWishlist(newWishlist);
+    addToast(`${removedItem.title} removed from wishlist`, 'info');
   };
 
   const moveToCart = (game) => {
@@ -48,10 +54,14 @@ const Cart = ({ updateCartCount }) => {
     setCart(newCart);
     setWishlist(newWishlist);
     updateCartCount(newCart.length);
+    addToast(`${game.title} moved to cart!`, 'success');
   };
 
   const purchase = () => {
-    if (cart.length > 0) navigate("/transaction");
+    if (cart.length > 0) {
+      addToast('Processing your purchase...', 'info');
+      navigate("/transaction");
+    }
   };
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
