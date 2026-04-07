@@ -3,13 +3,10 @@ import {
   Box,
   CircularProgress,
   Typography,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
-  Button,
 } from "@mui/material";
 import { motion } from "framer-motion";
+import GameCard from "../Components/GameCard";
+import { useToast } from "../Components/Toast";
 import "@fontsource/metal-mania";
 
 // Original Assets
@@ -111,52 +108,47 @@ const games = [
 
 const categories = ["All", "Action", "Adventure", "Racing", "Fantasy", "Horror", "Sci-Fi"];
 
-const GradientButton = ({ children, onClick, selected }) => (
-  <Box
-    component="button"
-    onClick={onClick}
-    sx={{
-      alignItems: "center",
-      backgroundImage: "linear-gradient(144deg, #af40ff, #5b42f3 50%, #00ddeb)",
-      border: 0,
-      borderRadius: "8px",
-      boxShadow: "rgba(151, 65, 252, 0.2) 0 15px 30px -5px",
-      color: "#ffffff",
-      display: "flex",
-      fontSize: { xs: "14px", md: "18px" },
-      justifyContent: "center",
-      minWidth: { xs: "80px", md: "120px" },
-      padding: "3px",
-      cursor: "pointer",
-      transition: "all 0.3s",
-      transform: selected ? "scale(1.05)" : "scale(1)",
-      "&:active": { transform: "scale(0.9)" },
-    }}
-  >
+const CategoryButton = ({ children, onClick, selected }) => (
+  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
     <Box
-      component="span"
+      component="button"
+      onClick={onClick}
       sx={{
-        backgroundColor: selected ? "transparent" : "rgb(5, 6, 45)",
-        padding: { xs: "8px 12px", md: "12px 20px" },
-        borderRadius: "6px",
-        width: "100%",
-        height: "100%",
-        transition: "300ms",
-        textAlign: "center",
+        backgroundColor: selected ? "#FFD700" : "rgba(255, 215, 0, 0.1)",
+        color: selected ? "black" : "white",
+        border: selected ? "2px solid #FFD700" : "2px solid rgba(255, 215, 0, 0.3)",
+        borderRadius: "10px",
+        padding: { xs: "8px 16px", md: "12px 24px" },
+        fontSize: { xs: "12px", md: "14px" },
+        fontWeight: selected ? "700" : "500",
+        fontFamily: '"Nevan RUS", sans-serif',
+        cursor: "pointer",
+        transition: "all 0.3s ease",
+        textTransform: "uppercase",
+        letterSpacing: 0.5,
+        "&:hover": {
+          backgroundColor: selected ? "#FFD700" : "rgba(255, 215, 0, 0.2)",
+          boxShadow: selected ? "0 0 20px rgba(255, 215, 0, 0.4)" : "0 0 10px rgba(255, 215, 0, 0.2)",
+        },
       }}
     >
       {children}
     </Box>
-  </Box>
+  </motion.div>
 );
 
 const BATCH = 12;
 
 const Categories = ({ updateCartCount }) => {
+  const { addToast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cartIds, setCartIds] = useState(() => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     return new Set(cart.map((item) => item.id));
+  });
+  const [wishlistIds, setWishlistIds] = useState(() => {
+    const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+    return new Set(wishlist.map((item) => item.id));
   });
   const [visibleCount, setVisibleCount] = useState(BATCH);
   const sentinelRef = useRef(null);
@@ -168,6 +160,10 @@ const Categories = ({ updateCartCount }) => {
   useEffect(() => {
     setVisibleCount(BATCH);
   }, [selectedCategory]);
+
+  useEffect(() => {
+    updateCartCount(cartIds.size);
+  }, [cartIds, updateCartCount]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -185,12 +181,39 @@ const Categories = ({ updateCartCount }) => {
   }, [visibleCount, filteredGames.length]);
 
   const addToCart = (game) => {
-    if (cartIds.has(game.id)) return;
+    if (cartIds.has(game.id)) {
+      addToast(`${game.title} is already in your cart!`, 'info');
+      return;
+    }
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
     cart.push(game);
     localStorage.setItem("cart", JSON.stringify(cart));
     setCartIds((prev) => new Set([...prev, game.id]));
-    if (updateCartCount) updateCartCount(cart.length);
+    updateCartCount(cart.length);
+    addToast(`${game.title} added to cart! 🛒`, 'success');
+  };
+
+  const addToWishlist = (game) => {
+    const isInWishlist = wishlistIds.has(game.id);
+    if (isInWishlist) {
+      // Remove from wishlist
+      let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+      wishlist = wishlist.filter((item) => item.id !== game.id);
+      localStorage.setItem("wishlist", JSON.stringify(wishlist));
+      setWishlistIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(game.id);
+        return newSet;
+      });
+      addToast(`${game.title} removed from wishlist`, 'info');
+    } else {
+      // Add to wishlist
+      let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+      wishlist.push(game);
+      localStorage.setItem("wishlist", JSON.stringify(wishlist));
+      setWishlistIds((prev) => new Set([...prev, game.id]));
+      addToast(`${game.title} added to wishlist! ❤️`, 'success');
+    }
   };
 
   return (
@@ -203,137 +226,79 @@ const Categories = ({ updateCartCount }) => {
         py: 4,
       }}
     >
+      {/* Title */}
       <Typography
         align="center"
-        sx={{ fontFamily: "'Metal Mania', cursive", fontSize: { xs: "32px", md: "50px" }, mb: 4 }}
+        sx={{
+          fontFamily: "'Metal Mania', cursive",
+          fontSize: { xs: "32px", md: "50px" },
+          mb: 4,
+          letterSpacing: 2,
+        }}
       >
-        Game Categories
+        🎮 Game Categories
       </Typography>
 
       {/* Category Filter Buttons */}
-      <Box display="flex" justifyContent="center" flexWrap="wrap" gap={{ xs: 1, md: 2 }} mb={4}>
+      <Box
+        display="flex"
+        justifyContent="center"
+        flexWrap="wrap"
+        gap={{ xs: 1, md: 2 }}
+        mb={4}
+      >
         {categories.map((cat) => (
-          <GradientButton key={cat} onClick={() => setSelectedCategory(cat)} selected={selectedCategory === cat}>
+          <CategoryButton
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            selected={selectedCategory === cat}
+          >
             {cat}
-          </GradientButton>
+          </CategoryButton>
         ))}
       </Box>
 
-      {/* Game Cards */}
+      {/* Responsive Game Grid */}
       <Box
         sx={{
-          display: "flex",
-          flexWrap: "wrap",
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "repeat(1, 1fr)",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)",
+            lg: "repeat(4, 1fr)",
+          },
           gap: { xs: 2, md: 3 },
-          justifyContent: "center",
           py: 3,
-          px: 1,
         }}
       >
-        {filteredGames.slice(0, visibleCount).map((game) => {
-          const inCart = cartIds.has(game.id);
-          return (
-          <motion.div
+        {filteredGames.slice(0, visibleCount).map((game) => (
+          <GameCard
             key={game.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
-            whileHover={{ scale: 1.05 }}
-          >
-            <Card
-              sx={{
-                width: { xs: "calc(50vw - 24px)", sm: 260, md: 280 },
-                minWidth: { xs: "140px" },
-                maxWidth: "280px",
-                height: { xs: "auto", md: 420 },
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                background: "linear-gradient(to bottom, #1a0000, #000)",
-                color: "white",
-                borderRadius: "12px",
-                overflow: "hidden",
-                "&:hover": { boxShadow: inCart ? "0 0 20px rgba(0,200,80,0.5)" : "0 0 20px rgb(98, 1, 1)" },
-              }}
-            >
-              {/* Image with IN CART badge */}
-              <Box sx={{ position: "relative" }}>
-                <CardMedia
-                  component="img"
-                  height="160"
-                  image={game.image}
-                  alt={game.title}
-                  sx={{ objectFit: "cover" }}
-                />
-                {inCart && (
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      top: 8, right: 8,
-                      backgroundColor: "#00c853",
-                      color: "white",
-                      fontSize: { xs: "9px", md: "11px" },
-                      fontWeight: 700,
-                      px: 1, py: 0.3,
-                      borderRadius: "4px",
-                      letterSpacing: 1,
-                      boxShadow: "0 0 8px rgba(0,200,80,0.7)",
-                    }}
-                  >
-                    ✓ IN CART
-                  </Box>
-                )}
-              </Box>
-              <CardContent sx={{ flexGrow: 1, pb: 0, px: { xs: 1.5, md: 2 } }}>
-                <Typography variant="h6" sx={{ fontWeight: "bold", mb: 0.5, fontSize: { xs: "14px", md: "18px" } }}>
-                  {game.title}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{ color: "#af40ff", fontWeight: "bold", letterSpacing: 1, textTransform: "uppercase", display: "block", mb: 0.5, fontSize: { xs: "10px", md: "12px" } }}
-                >
-                  {game.category}
-                </Typography>
-                <Typography variant="body2" color="gray" sx={{ fontSize: { xs: "11px", md: "13px" } }}>
-                  {game.description}
-                </Typography>
-                <Typography variant="body1" sx={{ color: "#00ddeb", fontWeight: "bold", mt: 1, fontSize: { xs: "14px", md: "16px" } }}>
-                  ${game.price.toFixed(2)}
-                </Typography>
-              </CardContent>
-              <CardActions sx={{ justifyContent: "center", pb: 2 }}>
-                <Button
-                  variant="contained"
-                  size="small"
-                  disableElevation={inCart}
-                  sx={{
-                    backgroundColor: inCart ? "#00c853" : "red",
-                    color: "white",
-                    borderRadius: "8px",
-                    fontSize: { xs: "11px", md: "14px" },
-                    cursor: inCart ? "default" : "pointer",
-                    "&:hover": inCart
-                      ? { backgroundColor: "#00c853" }
-                      : { backgroundColor: "#cc0000", transform: "scale(1.05)" },
-                  }}
-                  onClick={() => addToCart(game)}
-                >
-                  {inCart ? "✓ Added" : "Add to Cart"}
-                </Button>
-              </CardActions>
-            </Card>
-          </motion.div>
-          );
-        })}
+            game={game}
+            onAddToCart={() => addToCart(game)}
+            onAddToWishlist={() => addToWishlist(game)}
+            isInCart={cartIds.has(game.id)}
+            isInWishlist={wishlistIds.has(game.id)}
+          />
+        ))}
       </Box>
 
-      {/* Sentinel + loader */}
+      {/* Sentinel for infinite scroll */}
       <Box ref={sentinelRef} sx={{ display: "flex", justifyContent: "center", py: 4 }}>
         {visibleCount < filteredGames.length ? (
-          <CircularProgress size={36} sx={{ color: "red" }} />
+          <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+            <CircularProgress size={36} sx={{ color: "#FFD700" }} />
+          </motion.div>
+        ) : filteredGames.length >= 1 ? (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+            <Typography sx={{ color: "#FFD700", fontSize: "14px", letterSpacing: 1, fontWeight: 600 }}>
+              ✓ All {filteredGames.length} games shown
+            </Typography>
+          </motion.div>
         ) : (
-          <Typography sx={{ color: "grey", fontSize: "13px", letterSpacing: 1 }}>
-            All {filteredGames.length} games loaded
+          <Typography sx={{ color: "gray", fontSize: "14px" }}>
+            No games found in this category
           </Typography>
         )}
       </Box>

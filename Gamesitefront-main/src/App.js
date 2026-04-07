@@ -16,12 +16,14 @@ import Contactform from "../src/Pages/Support";
 import Signup from "./Pages/Signup";
 import Logout from "../src/Pages/Logout";
 import ProtectedRoute from "./Components/ProtectedRoute";
+import { ToastProvider } from "./Components/Toast";
 // import { AuthProvider } from "./Components/AuthContext";
 function App() {
   const [cartCount, setCartCount] = useState(0);
 
   return (
-    <Router>
+    <ToastProvider>
+      <Router>
       <Routes>
         <Route
           path="/"
@@ -145,7 +147,8 @@ function App() {
      
       </Routes>
       
-    </Router>
+      </Router>
+    </ToastProvider>
   );
 }
 
