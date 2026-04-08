@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Paper } from '@mui/material';
 import { styled } from '@mui/system';
 
@@ -25,6 +25,15 @@ const Dot = styled(Box)(({ active }) => ({
 
 export default function Feedback() {
   const [activeIndex, setActiveIndex] = useState(0);
+
+  // Auto-rotate feedback every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prevIndex) => (prevIndex + 1) % feedbacks.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <Box
