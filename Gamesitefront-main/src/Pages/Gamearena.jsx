@@ -13,22 +13,26 @@ import Modern from '../Assests/Modern.jpg';
 import Fc from '../Assests/Fc.jpeg';
 import F1 from '../Assests/F1.jpeg';
 
-import KeyboardDoubleArrowRightTwoToneIcon from '@mui/icons-material/KeyboardDoubleArrowRightTwoTone';
-import KeyboardDoubleArrowLeftTwoToneIcon from '@mui/icons-material/KeyboardDoubleArrowLeftTwoTone';
-
 const images = [Arena1, Arena2, Arena3, Arena4, pubg, Spiderman, Modern, Fc, F1];
+
+// Triple the images for smooth infinite loop
+const tripleImages = [...images, ...images, ...images];
 
 const GameArenaCarousel = () => {
   const scrollRef = useRef(null);
-  const [scrollIndex, setScrollIndex] = useState(0);
-  const imageWidth = 252;
+  const [isHovering, setIsHovering] = useState(false);
+  const scrollSpeedRef = useRef(1); // pixels per frame
+  const animationIdRef = useRef(null);
 
-  const scroll = (direction) => {
-    const newIndex = direction === "left" ? scrollIndex - 1 : scrollIndex + 1;
-    const clampedIndex = Math.max(0, Math.min(newIndex, images.length - 1));
-    setScrollIndex(clampedIndex);
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({ left: clampedIndex * imageWidth, behavior: "smooth" });
+  const handleScroll = () => {
+    const ref = scrollRef.current;
+    if (!ref) return;
+
+    const singleSetWidth = images.length * 268; // approximate width of one set
+    
+    // Reset to beginning for seamless infinite loop
+    if (ref.scrollLeft >= singleSetWidth * 2) {
+      ref.scrollLeft = 0;
     }
   };
 
@@ -36,26 +40,28 @@ const GameArenaCarousel = () => {
     const ref = scrollRef.current;
     if (!ref) return;
 
-    const handleScroll = () => {
-      const index = Math.round(ref.scrollLeft / imageWidth);
-      setScrollIndex(index);
-    };
-    ref.addEventListener("scroll", handleScroll);
+    const autoScroll = () => {
+      if (!isHovering && ref) {
+        ref.scrollLeft += scrollSpeedRef.current;
 
-    let isForward = true;
-    const interval = setInterval(() => {
-      if (!ref) return;
-      const scrollAmount = isForward ? 10 : -10;
-      ref.scrollLeft += scrollAmount;
-      if (ref.scrollLeft <= 0) isForward = true;
-      else if (ref.scrollLeft >= ref.scrollWidth - ref.clientWidth) isForward = false;
-    }, 30);
+        const singleSetWidth = images.length * 268;
+
+        // Seamless loop - reset to start when reaching end
+        if (ref.scrollLeft >= singleSetWidth * 2) {
+          ref.scrollLeft = 0;
+        }
+      }
+      animationIdRef.current = requestAnimationFrame(autoScroll);
+    };
+
+    animationIdRef.current = requestAnimationFrame(autoScroll);
 
     return () => {
-      ref.removeEventListener("scroll", handleScroll);
-      clearInterval(interval);
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+      }
     };
-  }, []);
+  }, [isHovering]);
 
   return (
     <Box sx={{ background: "linear-gradient(to top, #330000, #000)", color: "white", p: { xs: 2, md: 3 }, pb: 0 }}>
@@ -64,6 +70,11 @@ const GameArenaCarousel = () => {
           fontFamily: "'Metal Mania', cursive",
           fontWeight: 400,
           fontSize: { xs: "26px", md: "35px" },
+          animation: "slideInDown 0.8s ease-out",
+          "@keyframes slideInDown": {
+            from: { opacity: 0, transform: "translateY(-20px)" },
+            to: { opacity: 1, transform: "translateY(0)" },
+          },
         }}
       >
         GAME ARENA
@@ -73,7 +84,7 @@ const GameArenaCarousel = () => {
         sx={{
           display: "flex",
           overflowX: "auto",
-          scrollBehavior: "smooth",
+          scrollBehavior: "auto",
           gap: 2,
           px: 1,
           paddingTop: "20px",
@@ -81,8 +92,11 @@ const GameArenaCarousel = () => {
           '&::-webkit-scrollbar': { display: 'none' },
         }}
         ref={scrollRef}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+        onScroll={handleScroll}
       >
-        {images.map((src, index) => (
+        {tripleImages.map((src, index) => (
           <Box
             key={index}
             component="img"
@@ -94,52 +108,23 @@ const GameArenaCarousel = () => {
               borderRadius: 2,
               objectFit: "cover",
               flexShrink: 0,
-              transition: "transform 0.3s ease, filter 0.3s ease",
+              transition: "all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)",
               cursor: "pointer",
+              animation: "fadeInUp 0.6s ease-out forwards",
+              animationDelay: `${(index % images.length) * 0.08}s`,
+              "@keyframes fadeInUp": {
+                from: { opacity: 0, transform: "translateY(20px)" },
+                to: { opacity: 1, transform: "translateY(0)" },
+              },
               "&:hover": {
-                transform: "scale(1.05)",
-                filter: "brightness(1.1)",
-                boxShadow: "2px 4px 10px rgb(255, 0, 0)",
-                borderRadius: 5,
+                transform: "scale(1.08) translateY(-5px)",
+                filter: "brightness(1.15) saturate(1.2)",
+                boxShadow: "0 8px 24px rgba(255, 0, 0, 0.5), inset 0 0 20px rgba(255, 100, 100, 0.3)",
+                borderRadius: 3,
               },
             }}
           />
         ))}
-      </Box>
-
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4, mb: 2, alignItems: "center", gap: 2, width: '100%' }}>
-        <KeyboardDoubleArrowLeftTwoToneIcon
-          onClick={() => scroll("left")}
-          sx={{ color: "white", fontSize: { xs: 28, md: 40 }, cursor: "pointer", transition: "transform 0.2s", '&:hover': { transform: "scale(1.5)" } }}
-        />
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1.5, md: 3 }, flexWrap: "wrap", justifyContent: "center" }}>
-          {images.map((_, idx) => (
-            <Box
-              key={idx}
-              onClick={() => {
-                setScrollIndex(idx);
-                if (scrollRef.current) {
-                  scrollRef.current.scrollTo({ left: idx * imageWidth, behavior: "smooth" });
-                }
-              }}
-              sx={{
-                width: { xs: 10, md: 15 },
-                height: { xs: 10, md: 15 },
-                borderRadius: "50%",
-                backgroundColor: idx === scrollIndex ? "white" : "gray",
-                transition: "all 0.3s",
-                cursor: "pointer",
-                '&:hover': { backgroundColor: "#ff1744", transform: "scale(1.3)" },
-              }}
-            />
-          ))}
-        </Box>
-
-        <KeyboardDoubleArrowRightTwoToneIcon
-          onClick={() => scroll("right")}
-          sx={{ color: "white", fontSize: { xs: 28, md: 40 }, cursor: "pointer", transition: "transform 0.2s", '&:hover': { transform: "scale(1.5)" } }}
-        />
       </Box>
     </Box>
   );
