@@ -24,6 +24,11 @@ function Newrelease() {
           fontSize: { xs: "32px", md: "48px" },
           mb: 4,
           ml: { xs: 0, md: 3 },
+          animation: "slideInDown 0.8s ease-out",
+          "@keyframes slideInDown": {
+            from: { opacity: 0, transform: "translateY(-20px)" },
+            to: { opacity: 1, transform: "translateY(0)" },
+          },
         }}
       >
         New Release
@@ -44,11 +49,16 @@ function Newrelease() {
             width: { xs: "100%", md: "48%" },
             borderRadius: 2,
             overflow: "hidden",
-            transition: "transform 0.3s ease",
+            transition: "all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)",
             "&:hover": {
-              transform: "scale(1.02)",
-              boxShadow: "2px 5px 10px rgb(255, 0, 0)",
-              borderRadius: 5,
+              transform: "scale(1.05) translateY(-5px)",
+              boxShadow: "0 12px 30px rgba(255, 0, 0, 0.6)",
+              borderRadius: 3,
+            },
+            animation: "fadeInLeft 0.8s ease-out",
+            "@keyframes fadeInLeft": {
+              from: { opacity: 0, transform: "translateX(-30px)" },
+              to: { opacity: 1, transform: "translateX(0)" },
             },
           }}
         >
@@ -66,6 +76,11 @@ function Newrelease() {
             display: "flex",
             flexDirection: "column",
             gap: 2,
+            animation: "fadeInRight 0.8s ease-out",
+            "@keyframes fadeInRight": {
+              from: { opacity: 0, transform: "translateX(30px)" },
+              to: { opacity: 1, transform: "translateX(0)" },
+            },
           }}
         >
           {/* Image 2 */}
@@ -75,11 +90,18 @@ function Newrelease() {
               aspectRatio: "16/9",
               borderRadius: 2,
               overflow: "hidden",
-              transition: "transform 0.3s ease",
+              transition: "all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)",
+              cursor: "pointer",
               "&:hover": {
-                transform: "scale(1.03)",
-                boxShadow: "5px 5px 10px rgb(255, 0, 0)",
-                borderRadius: 5,
+                transform: "scale(1.05) translateY(-5px)",
+                boxShadow: "0 10px 25px rgba(255, 0, 0, 0.5)",
+                borderRadius: 3,
+              },
+              animation: "fadeInRight 0.8s ease-out 0.1s forwards",
+              opacity: 0,
+              "@keyframes fadeInRight": {
+                from: { opacity: 0, transform: "translateX(30px)" },
+                to: { opacity: 1, transform: "translateX(0)" },
               },
             }}
           >
@@ -94,6 +116,12 @@ function Newrelease() {
               fontSize: { xs: "24px", sm: "36px", md: "44px" },
               lineHeight: { xs: "32px", md: "56px" },
               textTransform: "uppercase",
+              animation: "fadeInUp 0.8s ease-out 0.2s forwards",
+              opacity: 0,
+              "@keyframes fadeInUp": {
+                from: { opacity: 0, transform: "translateY(20px)" },
+                to: { opacity: 1, transform: "translateY(0)" },
+              },
             }}
           >
             WE ARE HERE TO YOU
@@ -106,11 +134,18 @@ function Newrelease() {
               aspectRatio: "16/7",
               borderRadius: 2,
               overflow: "hidden",
-              transition: "transform 0.3s ease",
+              transition: "all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)",
+              cursor: "pointer",
               "&:hover": {
-                transform: "scale(1.03)",
-                boxShadow: "5px 5px 10px rgb(255, 0, 0)",
-                borderRadius: 5,
+                transform: "scale(1.05) translateY(-5px)",
+                boxShadow: "0 10px 25px rgba(255, 0, 0, 0.5)",
+                borderRadius: 3,
+              },
+              animation: "fadeInRight 0.8s ease-out 0.3s forwards",
+              opacity: 0,
+              "@keyframes fadeInRight": {
+                from: { opacity: 0, transform: "translateX(30px)" },
+                to: { opacity: 1, transform: "translateX(0)" },
               },
             }}
           >
@@ -124,11 +159,18 @@ function Newrelease() {
               aspectRatio: "16/7",
               borderRadius: 2,
               overflow: "hidden",
-              transition: "transform 0.3s ease",
+              transition: "all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)",
+              cursor: "pointer",
               "&:hover": {
-                transform: "scale(1.03)",
-                boxShadow: "5px 5px 10px rgb(255, 0, 0)",
-                borderRadius: 5,
+                transform: "scale(1.05) translateY(-5px)",
+                boxShadow: "0 10px 25px rgba(255, 0, 0, 0.5)",
+                borderRadius: 3,
+              },
+              animation: "fadeInRight 0.8s ease-out 0.4s forwards",
+              opacity: 0,
+              "@keyframes fadeInRight": {
+                from: { opacity: 0, transform: "translateX(30px)" },
+                to: { opacity: 1, transform: "translateX(0)" },
               },
             }}
           >
@@ -142,11 +184,18 @@ function Newrelease() {
               aspectRatio: "16/9",
               borderRadius: 2,
               overflow: "hidden",
-              transition: "transform 0.3s ease",
+              transition: "all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)",
+              cursor: "pointer",
               "&:hover": {
-                transform: "scale(1.03)",
-                boxShadow: "5px 5px 10px rgb(255, 0, 0)",
-                borderRadius: 5,
+                transform: "scale(1.05) translateY(-5px)",
+                boxShadow: "0 10px 25px rgba(255, 0, 0, 0.5)",
+                borderRadius: 3,
+              },
+              animation: "fadeInRight 0.8s ease-out 0.5s forwards",
+              opacity: 0,
+              "@keyframes fadeInRight": {
+                from: { opacity: 0, transform: "translateX(30px)" },
+                to: { opacity: 1, transform: "translateX(0)" },
               },
             }}
           >
