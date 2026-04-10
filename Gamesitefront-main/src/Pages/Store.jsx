@@ -1,9 +1,10 @@
 
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { Box, CircularProgress, Container, Typography } from "@mui/material";
 import { motion } from "framer-motion";
 import GameCard from "../Components/GameCard";
+import SearchBar from "../Components/SearchBar";
 import { useToast } from "../Components/Toast";
 import "@fontsource/metal-mania";
 
@@ -115,6 +116,7 @@ const BATCH = 12;
 
 const Store = ({ updateCartCount = () => {} }) => {
   const { addToast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
   const [cartIds, setCartIds] = useState(() => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     return new Set(cart.map((item) => item.id));
@@ -126,24 +128,42 @@ const Store = ({ updateCartCount = () => {} }) => {
   const [visibleCount, setVisibleCount] = useState(BATCH);
   const sentinelRef = useRef(null);
 
+  // Filter games based on search query
+  const filteredGames = useMemo(() => {
+    if (!searchQuery.trim()) return games;
+    
+    const query = searchQuery.toLowerCase();
+    return games.filter(
+      (game) =>
+        game.title.toLowerCase().includes(query) ||
+        game.category.toLowerCase().includes(query) ||
+        game.description.toLowerCase().includes(query)
+    );
+  }, [searchQuery]);
+
   useEffect(() => {
     updateCartCount(cartIds.size);
   }, [cartIds, updateCartCount]);
 
   // Infinite scroll observer
   useEffect(() => {
-    if (visibleCount >= games.length) return;
+    if (visibleCount >= filteredGames.length) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setVisibleCount((prev) => Math.min(prev + BATCH, games.length));
+          setVisibleCount((prev) => Math.min(prev + BATCH, filteredGames.length));
         }
       },
       { threshold: 0.1 }
     );
     if (sentinelRef.current) observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [visibleCount]);
+  }, [visibleCount, filteredGames.length]);
+
+  // Reset visible count when search changes
+  useEffect(() => {
+    setVisibleCount(BATCH);
+  }, [searchQuery]);
 
   const addToCart = (game) => {
     if (cartIds.has(game.id)) {
@@ -193,50 +213,123 @@ const Store = ({ updateCartCount = () => {} }) => {
         </Typography>
       </motion.div>
 
+      {/* Search Bar */}
+      <Container maxWidth="xl">
+        <SearchBar searchValue={searchQuery} onSearchChange={setSearchQuery} />
+      </Container>
+
+      {/* Results Info */}
+      {searchQuery && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
+          <Typography
+            align="center"
+            sx={{
+              color: "#FFD700",
+              fontSize: "14px",
+              mb: 3,
+              letterSpacing: 1,
+            }}
+          >
+            Found {filteredGames.length} game{filteredGames.length !== 1 ? 's' : ''} matching "{searchQuery}"
+          </Typography>
+        </motion.div>
+      )}
+
       {/* Game Grid */}
       <Container maxWidth="xl">
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "repeat(1, 1fr)",
-              sm: "repeat(2, 1fr)",
-              md: "repeat(3, 1fr)",
-              lg: "repeat(4, 1fr)",
-            },
-            gap: 3,
-            pb: 6,
-          }}
-        >
-          {games.slice(0, visibleCount).map((game, index) => (
-            <GameCard
-              key={game.id}
-              game={game}
-              onAddToCart={addToCart}
-              onAddToWishlist={addToWishlist}
-              isInWishlist={wishlistIds.has(game.id)}
-              isInCart={cartIds.has(game.id)}
-            />
-          ))}
-        </Box>
+        {filteredGames.length === 0 ? (
+          // No Results Message
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                py: 12,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "48px",
+                  mb: 2,
+                  opacity: 0.5,
+                }}
+              >
+                🔍
+              </Typography>
+              <Typography
+                sx={{
+                  color: "#FFD700",
+                  fontSize: "24px",
+                  mb: 2,
+                  fontFamily: "'Metal Mania', cursive",
+                }}
+              >
+                No Games Found
+              </Typography>
+              <Typography
+                sx={{
+                  color: "#b0b0b0",
+                  fontSize: "16px",
+                  textAlign: "center",
+                  maxWidth: "400px",
+                }}
+              >
+                Sorry, we couldn't find any games matching "{searchQuery}". Try searching with different keywords or explore our full catalog.
+              </Typography>
+            </Box>
+          </motion.div>
+        ) : (
+          <>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "repeat(1, 1fr)",
+                  sm: "repeat(2, 1fr)",
+                  md: "repeat(3, 1fr)",
+                  lg: "repeat(4, 1fr)",
+                },
+                gap: 3,
+                pb: 6,
+              }}
+            >
+              {filteredGames.slice(0, visibleCount).map((game, index) => (
+                <GameCard
+                  key={game.id}
+                  game={game}
+                  onAddToCart={addToCart}
+                  onAddToWishlist={addToWishlist}
+                  isInWishlist={wishlistIds.has(game.id)}
+                  isInCart={cartIds.has(game.id)}
+                />
+              ))}
+            </Box>
 
-        {/* Sentinel + loader */}
-        <Box ref={sentinelRef} sx={{ display: "flex", justifyContent: "center", py: 4, flexDirection: "column", alignItems: "center" }}>
-          {visibleCount < games.length ? (
-            <>
-              <CircularProgress size={40} sx={{ color: "#FFD700", mb: 2 }} />
-              <Typography sx={{ color: "#b0b0b0", fontSize: "14px", letterSpacing: 1 }}>
-                Loading more games...
-              </Typography>
-            </>
-          ) : (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-              <Typography sx={{ color: "#FFD700", fontSize: "16px", letterSpacing: 1, fontFamily: '"Metal Mania", cursive' }}>
-                ✓ All {games.length} games loaded
-              </Typography>
-            </motion.div>
-          )}
-        </Box>
+            {/* Sentinel + loader */}
+            <Box ref={sentinelRef} sx={{ display: "flex", justifyContent: "center", py: 4, flexDirection: "column", alignItems: "center" }}>
+              {visibleCount < filteredGames.length ? (
+                <>
+                  <CircularProgress size={40} sx={{ color: "#FFD700", mb: 2 }} />
+                  <Typography sx={{ color: "#b0b0b0", fontSize: "14px", letterSpacing: 1 }}>
+                    Loading more games...
+                  </Typography>
+                </>
+              ) : (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+                  <Typography sx={{ color: "#FFD700", fontSize: "16px", letterSpacing: 1, fontFamily: '"Metal Mania", cursive' }}>
+                    ✓ All {filteredGames.length} games loaded
+                  </Typography>
+                </motion.div>
+              )}
+            </Box>
+          </>
+        )}
       </Container>
     </Box>
   );
