@@ -1,7 +1,7 @@
 // src/components/Hero.jsx
 
 import React from "react";
-import { Box, Typography, TextField } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
@@ -34,22 +34,7 @@ const Hero = () => {
         background: "linear-gradient(to top, #330000, #000)",
       }}
     >
-      {/* Search Input */}
-      <TextField
-        variant="outlined"
-        placeholder="Search"
-        sx={{
-          fontFamily: "'Metal Mania',cursive",
-          width: { xs: "90%", sm: "400px" },
-          borderRadius: "30px",
-          backgroundColor: "#1a1a1a",
-          input: { color: "#fff", paddingY: 1.5 },
-          fieldset: { border: "none" },
-          marginTop: "20px",
-          marginBottom: "10px",
-        }}
-        InputProps={{ sx: { pl: 2 } }}
-      />
+
 
       {/* Carousel Container */}
       <Box
