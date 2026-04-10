@@ -63,7 +63,7 @@ const Topdeals = () => {
           sx={{
             width: { xs: "100%", md: "50%" },
             aspectRatio: { xs: "16/9", md: "auto" },
-            height: { md: "500px" },
+            height: { xs: "300px", md: "650px" },
             position: "relative",
             borderRadius: 5,
             overflow: "hidden",
@@ -105,17 +105,17 @@ const Topdeals = () => {
             flexDirection: "column",
             gap: 2,
             width: { xs: "100%", md: "50%" },
+            height: { xs: "auto", md: "650px" },
           }}
         >
           {/* Top 2 Images Side by Side */}
-          <Box sx={{ display: "flex", gap: 2 }}>
+          <Box sx={{ display: "flex", gap: 2, flex: 1, minHeight: 0 }}>
             {[0, 1].map((idx) => (
               <Box
                 key={idx}
                 onClick={() => handleImageClick(idx)}
                 sx={{
                   flex: 1,
-                  aspectRatio: "16/10",
                   borderRadius: 5,
                   overflow: "hidden",
                   cursor: "pointer",
@@ -140,7 +140,7 @@ const Topdeals = () => {
             onClick={() => handleImageClick(2)}
             sx={{
               width: "100%",
-              aspectRatio: "16/9",
+              flex: 1,
               borderRadius: 5,
               overflow: "hidden",
               cursor: "pointer",
